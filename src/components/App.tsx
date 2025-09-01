@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavBar } from "./Navbar/NavBar";
 import { Main } from "./Main/Main";
 import { Search } from "./Search/Search";
@@ -11,10 +11,46 @@ import { tempMovieData } from "../data/tempMovieData";
 import { tempWatchedData } from "../data/tempWatchedData";
 import { MovieType } from "../types/MovieType";
 import { WatchedMovieType } from "../types/WatchedMovieType";
+import { Loader } from "./UI/Loader";
+import { ErrorMessage } from "./UI/ErrorMessage";
+
+const apiKey = process.env.REACT_APP_API_KEY;
 
 export default function App() {
   const [movies, setMovies] = useState<MovieType[]>(tempMovieData);
   const [watched, setWatched] = useState<WatchedMovieType[]>(tempWatchedData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const query = "dsdsfasda";
+
+  useEffect(function () {
+    async function fetchMovies() {
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${apiKey}&s=${query}`
+        );
+
+        if (!res.ok) {
+          throw new Error("Something went wrong with fetching movies!");
+        }
+
+        const data = await res.json();
+
+        if (data.Response === "False") {
+          throw new Error("Movie not found");
+        }
+
+        setMovies(data.Search as MovieType[]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchMovies();
+  }, []);
 
   return (
     <>
@@ -24,7 +60,10 @@ export default function App() {
       </NavBar>
       <Main>
         <Box>
-          <MovieList movies={movies} />
+          {/* {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
+          {isLoading && <Loader />}
+          {!isLoading && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
           <>
