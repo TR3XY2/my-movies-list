@@ -26,7 +26,11 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   function handleSelectMovie(movieId : string) {
-    setSelectedId(movieId);
+    setSelectedId(selectedId => movieId === selectedId ? null : movieId);
+  }
+
+  function handleCloseMovie() {
+    setSelectedId(null);
   }
 
   useEffect(
@@ -83,7 +87,7 @@ export default function App() {
         </Box>
         <Box>
           {selectedId ? (
-            <MovieDetails selectedId={selectedId} />
+            <MovieDetails selectedId={selectedId} onCloseMovie={handleCloseMovie}/>
           ) : (
             <>
               <WatchedSummary watched={watched} />
