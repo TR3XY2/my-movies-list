@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { StringLiteral } from "typescript";
+import StarRating from "../UI/StarRating";
+import { Loader } from "../UI/Loader";
 
 type MovieType = {
   Title: string;
@@ -26,7 +28,7 @@ export function MovieDetails({
   apiKey,
 }: MovieDetailsProps) {
   const [movie, setMovie] = useState<MovieType | null>(null);
-
+  const [isLoading, setIsLoading] = useState(false);
   console.log(movie);
 
   useEffect(
@@ -35,7 +37,7 @@ export function MovieDetails({
         if (!apiKey) {
           return;
         }
-
+        setIsLoading(true);
         const res = await fetch(
           `http://www.omdbapi.com/?apikey=${apiKey}&i=${selectedId}`
         );
@@ -43,6 +45,8 @@ export function MovieDetails({
         const data: MovieType = await res.json();
 
         setMovie(data);
+        setIsLoading(false);
+
       }
 
       getMovieDetails();
@@ -52,23 +56,35 @@ export function MovieDetails({
 
   return (
     <div className="details">
-      <header>
-        <button className="btn-back" onClick={onCloseMovie}>
-          &larr;
-        </button>
-        <img src={movie?.Poster} alt={`Poster of ${movie?.Title} movie`} />
-        <div className="details-overview">
-          <h2>{movie?.Title}</h2>
+      { isLoading ? <Loader /> : <>
+        <header>
+          <button className="btn-back" onClick={onCloseMovie}>
+            &larr;
+          </button>
+          <img src={movie?.Poster} alt={`Poster of ${movie?.Title} movie`} />
+          <div className="details-overview">
+            <h2>{movie?.Title}</h2>
+            <p>
+              {movie?.Released} &bull; {movie?.Runtime}
+            </p>
+            <p>{movie?.Genre}</p>
+            <p>
+              <span>⭐</span>
+              {movie?.imdbRating} IMDb rating
+            </p>
+          </div>
+        </header>
+        <section>
+          <div className="rating">
+            <StarRating maxRating={10} size={24}/>
+          </div>
           <p>
-            {movie?.Released} &bull; {movie?.Runtime}
+            <em>{movie?.Plot}</em>
           </p>
-          <p>{movie?.Genre}</p>
-          <p>
-            <span>⭐</span>
-            {movie?.imdbRating} IMDb rating
-          </p>
-        </div>
-      </header>
+          <p>Starring {movie?.Actors}</p>
+          <p>Directed by {movie?.Director}</p>
+        </section>
+      </>}
     </div>
   );
 }
