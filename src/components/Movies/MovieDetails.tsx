@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { StringLiteral } from "typescript";
 import StarRating from "../UI/StarRating";
 import { Loader } from "../UI/Loader";
+import { WatchedMovieType } from "../../types/WatchedMovieType";
 
 type MovieType = {
   Title: string;
@@ -18,18 +18,42 @@ type MovieType = {
 
 type MovieDetailsProps = {
   selectedId: string;
-  onCloseMovie: React.MouseEventHandler<HTMLButtonElement>;
+  onCloseMovie: () => void;
   apiKey: string | undefined;
+  onAddWatched: (movie: WatchedMovieType) => void;
+  watched: WatchedMovieType[];
 };
 
 export function MovieDetails({
   selectedId,
   onCloseMovie,
   apiKey,
+  onAddWatched,
+  watched,
 }: MovieDetailsProps) {
   const [movie, setMovie] = useState<MovieType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [userRating, setUserRating] = useState(0);
   console.log(movie);
+
+  const watchedUserRating = watched.find(
+    (movie) => movie.imdbID === selectedId
+  )?.userRating;
+
+  function handleAdd() {
+    const newWatchedMovie: WatchedMovieType = {
+      imdbID: selectedId,
+      imdbRating: Number(movie?.imdbRating),
+      Title: movie?.Title ?? "",
+      Year: movie?.Year ?? "",
+      Poster: movie?.Poster ?? "",
+      runtime: Number(movie?.Runtime.split(" ").at(0)),
+      userRating: userRating,
+    };
+
+    onAddWatched(newWatchedMovie);
+    onCloseMovie();
+  }
 
   useEffect(
     function () {
@@ -46,7 +70,6 @@ export function MovieDetails({
 
         setMovie(data);
         setIsLoading(false);
-
       }
 
       getMovieDetails();
@@ -56,35 +79,57 @@ export function MovieDetails({
 
   return (
     <div className="details">
-      { isLoading ? <Loader /> : <>
-        <header>
-          <button className="btn-back" onClick={onCloseMovie}>
-            &larr;
-          </button>
-          <img src={movie?.Poster} alt={`Poster of ${movie?.Title} movie`} />
-          <div className="details-overview">
-            <h2>{movie?.Title}</h2>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <>
+          <header>
+            <button className="btn-back" onClick={onCloseMovie}>
+              &larr;
+            </button>
+            <img src={movie?.Poster} alt={`Poster of ${movie?.Title} movie`} />
+            <div className="details-overview">
+              <h2>{movie?.Title}</h2>
+              <p>
+                {movie?.Released} &bull; {movie?.Runtime}
+              </p>
+              <p>{movie?.Genre}</p>
+              <p>
+                <span>⭐</span>
+                {movie?.imdbRating} IMDb rating
+              </p>
+            </div>
+          </header>
+          <section>
+            <div className="rating">
+              {watched.some((movie) => movie.imdbID === selectedId) ? (
+                <p>
+                  You rated this movie {watchedUserRating} <span>⭐</span>
+                </p>
+              ) : (
+                <>
+                  <StarRating
+                    maxRating={10}
+                    size={24}
+                    onSetRating={setUserRating}
+                  />
+
+                  {userRating > 0 && (
+                    <button className="btn-add" onClick={handleAdd}>
+                      + Add to list
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
             <p>
-              {movie?.Released} &bull; {movie?.Runtime}
+              <em>{movie?.Plot}</em>
             </p>
-            <p>{movie?.Genre}</p>
-            <p>
-              <span>⭐</span>
-              {movie?.imdbRating} IMDb rating
-            </p>
-          </div>
-        </header>
-        <section>
-          <div className="rating">
-            <StarRating maxRating={10} size={24}/>
-          </div>
-          <p>
-            <em>{movie?.Plot}</em>
-          </p>
-          <p>Starring {movie?.Actors}</p>
-          <p>Directed by {movie?.Director}</p>
-        </section>
-      </>}
+            <p>Starring {movie?.Actors}</p>
+            <p>Directed by {movie?.Director}</p>
+          </section>
+        </>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ type MovieListProps = {
   onSelectMovie: (movieId: string) => void;
 };
 
-export function MovieList({ movies, onSelectMovie }: MovieListProps) {
+export function MovieList({ movies, onSelectMovie}: MovieListProps) {
   return (
     <ul className="list list-movies">
       {movies?.map((movie) => (

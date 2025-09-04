@@ -8,7 +8,6 @@ import { MovieList } from "./Movies/MovieList";
 import { WatchedMoviesList } from "./Movies/WatchedMoviesList";
 import { WatchedSummary } from "./Movies/WatchedSummary";
 import { tempMovieData } from "../data/tempMovieData";
-import { tempWatchedData } from "../data/tempWatchedData";
 import { MovieType } from "../types/MovieType";
 import { WatchedMovieType } from "../types/WatchedMovieType";
 import { Loader } from "./UI/Loader";
@@ -19,18 +18,26 @@ const apiKey = process.env.REACT_APP_API_KEY;
 
 export default function App() {
   const [movies, setMovies] = useState<MovieType[]>(tempMovieData);
-  const [watched, setWatched] = useState<WatchedMovieType[]>(tempWatchedData);
+  const [watched, setWatched] = useState<WatchedMovieType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("interstellar");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  function handleSelectMovie(movieId : string) {
-    setSelectedId(selectedId => movieId === selectedId ? null : movieId);
+  function handleSelectMovie(movieId: string) {
+    setSelectedId((selectedId) => (movieId === selectedId ? null : movieId));
   }
 
   function handleCloseMovie() {
     setSelectedId(null);
+  }
+
+  function handleAddWatched(movie: WatchedMovieType) {
+    setWatched((watched) => [...watched, movie]);
+  }
+
+  function handleDeleteWatched(id: string) {
+    setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
 
   useEffect(
@@ -82,16 +89,24 @@ export default function App() {
         <Box>
           {/* {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
           {isLoading && <Loader />}
-          {!isLoading && !error && <MovieList movies={movies} onSelectMovie={handleSelectMovie}/>}
+          {!isLoading && !error && (
+            <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
+          )}
           {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
           {selectedId ? (
-            <MovieDetails selectedId={selectedId} onCloseMovie={handleCloseMovie} apiKey={apiKey}/>
+            <MovieDetails
+              selectedId={selectedId}
+              onCloseMovie={handleCloseMovie}
+              apiKey={apiKey}
+              onAddWatched={handleAddWatched}
+              watched={watched}
+            />
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <WatchedMoviesList watched={watched} />
+              <WatchedMoviesList watched={watched} onDeleteWatched={handleDeleteWatched}/>
             </>
           )}
         </Box>
