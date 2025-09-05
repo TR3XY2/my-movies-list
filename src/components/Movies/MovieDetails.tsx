@@ -58,23 +58,34 @@ export function MovieDetails({
   useEffect(
     function () {
       async function getMovieDetails() {
-        if (!apiKey) {
-          return;
+        if (!apiKey) return;
+        try {
+          setIsLoading(true);
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${apiKey}&i=${selectedId}`
+          );
+          if (!res.ok) throw new Error("Network error");
+          const data = await res.json();
+          if (data.Response === "False") throw new Error(data.Error);
+          setMovie(data);
+        } catch (err) {
+          console.error(err);
+          setMovie(null);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${apiKey}&i=${selectedId}`
-        );
-
-        const data: MovieType = await res.json();
-
-        setMovie(data);
-        setIsLoading(false);
       }
 
       getMovieDetails();
     },
     [selectedId, apiKey]
+  );
+
+  useEffect(
+    function () {
+      document.title = `Movie | ${movie?.Title ?? ""} `;
+    },
+    [movie?.Title]
   );
 
   return (
