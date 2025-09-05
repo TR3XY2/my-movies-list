@@ -84,6 +84,10 @@ export function MovieDetails({
   useEffect(
     function () {
       document.title = `Movie | ${movie?.Title ?? ""} `;
+
+      return function () {
+        document.title = "myMoviesList";
+      };
     },
     [movie?.Title]
   );
